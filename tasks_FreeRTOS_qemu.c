@@ -14,35 +14,63 @@
 #include "task.h"
 
 
-void vBlinkLED4(void *pvParam){
-  const TickType_t xDelay = 500 / portTICK_PERIOD_MS;
-
-  while(1){
-    BSP_LED_Toggle(LED4);
-    vTaskDelay(xDelay);
-  } // while
-} // vBlinkLED4
+typedef struct parameters { // scruct de parâmetros
+	int led;
+	int period;
+} ledstruct;
 
 
-void vBlinkLED5(void *pvParam){
+ledstruct led1,led2,led3,led4;
+
+
+void vBlinkLED(ledstruct *pvParam){ // Task Geral
+
+  int LED = pvParam-> led;
+  int period = pvParam-> period;
+
   TickType_t xLastWakeTime;
-  const TickType_t xPeriod = 500 / portTICK_PERIOD_MS;
+  const TickType_t xPeriod = period / portTICK_PERIOD_MS;
   xLastWakeTime = xTaskGetTickCount();
 
   while(1){
-    BSP_LED_Toggle(LED5);
+    BSP_LED_Toggle(LED);
     vTaskDelayUntil(&xLastWakeTime, xPeriod);
   } // while
-} // vBlinkLED5
+}
+
+
 
 
 void main(void){
+
+	// Inicialização dos LEDs
+
   __HAL_RCC_GPIOD_CLK_ENABLE();
+
+  BSP_LED_Init(LED3);
   BSP_LED_Init(LED4);
   BSP_LED_Init(LED5);
+  BSP_LED_Init(LED6);
 
-  xTaskCreate(vBlinkLED4, "vBlinkLED4", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY, NULL);
-  xTaskCreate(vBlinkLED5, "vBlinkLED5", configMINIMAL_STACK_SIZE, NULL, tskIDLE_PRIORITY, NULL);
+  // Definindo os parâmetros da struct
+
+  led1.led = LED3;
+  led1.period = 330;
+  led2.led = LED4;
+  led2.period = 230;
+  led3.led = LED5;
+  led3.period = 130;
+  led4.led = LED6;
+  led4.period = 430;
+
+
+  // Criando 4 instancias da mesma task
+
+  xTaskCreate(vBlinkLED, "vBlinkLED3", configMINIMAL_STACK_SIZE, &led1, tskIDLE_PRIORITY, NULL);
+  xTaskCreate(vBlinkLED, "vBlinkLED4", configMINIMAL_STACK_SIZE, &led2, tskIDLE_PRIORITY, NULL);
+  xTaskCreate(vBlinkLED, "vBlinkLED5", configMINIMAL_STACK_SIZE, &led3, tskIDLE_PRIORITY, NULL);
+  xTaskCreate(vBlinkLED, "vBlinkLED6", configMINIMAL_STACK_SIZE, &led4, tskIDLE_PRIORITY, NULL);
+
 
   vTaskStartScheduler();
   while(1);
