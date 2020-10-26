@@ -18,10 +18,6 @@
 
 #define BUFFER_SIZE 8
 
-
-//SemaphoreHandle_t xSemFree = NULL;
-//SemaphoreHandle_t xSemFull = NULL;
-
 QueueHandle_t xQueue1;
 uint8_t buffer[BUFFER_SIZE];
 
@@ -29,17 +25,11 @@ uint8_t buffer[BUFFER_SIZE];
 void xProdTask(void *pvParam){
   const TickType_t xPeriod = 250 / portTICK_PERIOD_MS;
   TickType_t xLastWakeTime = xTaskGetTickCount();
-  uint8_t index_i = 0, data_i = 0;
+  uint8_t data_i = 0;
 
   while(1){
 
-  buffer[index_i] = data_i;
-
   xQueueSend(xQueue1,&data_i,(TickType_t) 10); 	// se a mensagem foi enviada em 10 ticks
-
-  index_i++; // update input index
-  if(index_i >= BUFFER_SIZE)
-     index_i = 0;
 
 	// data prod
   data_i++;
@@ -53,17 +43,11 @@ void xProdTask(void *pvParam){
 void xConsTask(void *pvParam){
   const TickType_t xPeriod = 250 / portTICK_PERIOD_MS;
   TickType_t xLastWakeTime = xTaskGetTickCount();
-  uint8_t index_o = 0, data_o;
+  uint8_t data_o;
 
   while(1){
 
 	if(xQueueReceive(xQueue1,&data_o,(TickType_t) 10 ) == pdPASS){ //conseguiu receber
-
-			data_o = buffer[index_o]; // get data
-
-		    index_o++; // update output index
-		    if(index_o >= BUFFER_SIZE)
-		      index_o = 0;
 
 		    // data consumption
 		    if (data_o & 0x01) BSP_LED_On(LED3);
@@ -77,11 +61,7 @@ void xConsTask(void *pvParam){
 
 		    if (data_o & 0x08) BSP_LED_On(LED5);
 		    else BSP_LED_Off(LED5);
-
-
 	}
-
-
 	vTaskDelayUntil(&xLastWakeTime, xPeriod);
   } // while
 } // xConsTask
